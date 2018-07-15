@@ -73,25 +73,9 @@ class Tournament(object):
             return tournament
 
     def new_pairings(self):
-        sorted_players = self.players[:]
-        random.shuffle(sorted_players)
-        sorted_players.sort(key=lambda player: player.match_points)
-
-        bye_player = None
-        if len(sorted_players) % 2 != 0:
-            for i, player in enumerate(sorted_players):
-                if not player.had_bye:
-                    break
-            bye_player = sorted_players.pop(i)
-
-        sorted_players.reverse()
-        pairings = []
-        for i in range(0, len(sorted_players), 2):
-            pairings.append((sorted_players[i].name, sorted_players[i+1].name))
-
-        if bye_player:
-            pairings.append((bye_player.name,))
-
+        pairings = self.__generate_pairings()
+        while not self.__validate_pairings(pairings):
+            pairings = self.__generate_pairings()
         return pairings
 
     def record_results(self, results):
@@ -124,13 +108,47 @@ class Tournament(object):
         with open(os.path.join(save_dir, '%s_round%d.mtg' % (self.name, self.round)), 'wb') as f:
             pickle.dump(self, f)
 
+    def __generate_pairings(self):
+        sorted_players = self.players[:]
+        random.shuffle(sorted_players)
+        sorted_players.sort(key=lambda player: player.match_points)
+
+        bye_player = None
+        if len(sorted_players) % 2 != 0:
+            for i, player in enumerate(sorted_players):
+                if not player.had_bye:
+                    break
+            bye_player = sorted_players.pop(i)
+
+        sorted_players.reverse()
+        pairings = []
+        for i in range(0, len(sorted_players), 2):
+            pairings.append((sorted_players[i].name, sorted_players[i+1].name))
+
+        if bye_player:
+            pairings.append((bye_player.name,))
+
+        return pairings
+
+    def __validate_pairings(self, pairings):
+        for pair in pairings:
+            if len(pair) == 1:
+                player = self.all_players[pair[0]]
+                if player.had_bye:
+                    return False
+            else:
+                player1 = self.all_players[pair[0]]
+                if pair[1] in player1.already_played:
+                    return False
+        return True
+
     def __validate_results(self, results):
         player_names = self.__current_player_names()
 
         for result in results:
             for player_result in result.player_results:
                 if player_result.name not in player_names:
-                    raise TournamentException('Player not in tournament or duplicate result: %s' % name)
+                    raise TournamentException('Player not in tournament or duplicate result: %s' % player_result.name)
                 player_names.remove(player_result.name)
 
         if player_names:
