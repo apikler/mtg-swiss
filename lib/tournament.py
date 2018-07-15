@@ -1,8 +1,16 @@
+import os
+import pickle
 import random
 
 class TournamentException(Exception):
     pass
 
+def print_pairings(pairings):
+    for pair in pairings:
+        if len(pair) == 1:
+            print('%s (BYE)' % pair[0])
+        else:
+            print('%s, %s' % (pair[0], pair[1]))
 
 class Player(object):
     def __init__(self, name):
@@ -26,13 +34,10 @@ class PlayerMatchResult(object):
 
 
 class MatchResult(object):
-    def __init__(self, player1_name, player1_wins, 
-        player2_name=None, player2_wins=None, 
-        player1_drop=False, player2_drop=False,
-        draws=0):
-        self.player_results = [PlayerMatchResult(player1_name, player1_wins, player1_drop)]
-        if player2_name:
-            self.player_results.append([PlayerMatchResult(player2_name, player2_wins, player2_drop)])
+    def __init__(self, player_results, draws=0):
+        if len(player_results) not in (1, 2):
+            raise TournamentException('Need exactly 1 or 2 player results; %d provided' % len(player_results))
+        self.player_results = player_results
         self.draws = draws
 
     def winner(self):
@@ -48,6 +53,7 @@ class MatchResult(object):
 class Tournament(object):
     def __init__(self, name, player_names):
         self.name = name
+        self.dir = None
 
         self.all_players = {}
         self.players = []
@@ -58,6 +64,13 @@ class Tournament(object):
 
         # Number of the last completed round.
         self.round = 0
+
+    @classmethod
+    def load(cls, path):
+        with open(path, 'rb') as f:
+            tournament = pickle.load(f)
+            tournament.dir = os.path.dirname(path)
+            return tournament
 
     def new_pairings(self):
         sorted_players = self.players[:]
@@ -104,7 +117,12 @@ class Tournament(object):
                 players[0].already_played.add(players[1].name)
                 players[1].already_played.add(players[0].name)
 
+        self.round += 1
 
+    def save(self, dir=None):
+        save_dir = dir or self.dir
+        with open(os.path.join(save_dir, '%s_round%d.mtg' % (self.name, self.round)), 'wb') as f:
+            pickle.dump(self, f)
 
     def __validate_results(self, results):
         player_names = self.__current_player_names()
@@ -113,7 +131,7 @@ class Tournament(object):
             for player_result in result.player_results:
                 if player_result.name not in player_names:
                     raise TournamentException('Player not in tournament or duplicate result: %s' % name)
-                player_names.remove(name)
+                player_names.remove(player_result.name)
 
         if player_names:
             raise TournamentException('Results not entered for the following players: %s' % list(player_names))
