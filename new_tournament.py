@@ -8,5 +8,5 @@ if __name__ == '__main__':
     parser.add_argument('players', type=str, nargs='+', help='player names, one arg per name')
     args = parser.parse_args()
 
-    print(args.name)
-    print(args.players)
+    tournament = Tournament(args.name, args.players)
+    print(tournament.new_pairings())
