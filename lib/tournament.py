@@ -1,3 +1,4 @@
+import copy
 import os
 import pickle
 import random
@@ -109,7 +110,18 @@ class Tournament(object):
             pickle.dump(self, f)
 
     def __generate_pairings(self):
-        sorted_players = self.players[:]
+        sorted_players = copy.deepcopy(self.players[:])
+
+        # Fix the scores so everyone has a multiple of 3. Anyone who doesn't gets
+        # rounded up or down randomly.
+        for player in sorted_players:
+            remainder = player.match_points % 3
+            if remainder != 0:
+                if random.randint(0, 1):
+                    player.match_points -= remainder + 3
+                else:
+                    player.match_points -= remainder
+
         random.shuffle(sorted_players)
         sorted_players.sort(key=lambda player: player.match_points)
 
