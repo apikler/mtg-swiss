@@ -41,6 +41,9 @@ class MatchResult(object):
         self.player_results = player_results
         self.draws = draws
 
+    def unplayed(self):
+        return len(self.player_results) == 2 and self.player_results[0].wins == 0 and self.player_results[1].wins == 0
+
     def winner(self):
         if len(self.player_results) == 1:
             return self.player_results[0].name
@@ -89,18 +92,25 @@ class Tournament(object):
                 player.game_points += 3*player_result.wins + result.draws
                 players.append(player)
 
-            winner = result.winner()
-            if winner:
-                self.all_players[winner].match_points += 3
-            else:
-                for player in players:
-                    player.match_points += 1
+            if not result.unplayed():
+                winner = result.winner()
+                if winner:
+                    self.all_players[winner].match_points += 3
+                else:
+                    for player in players:
+                        player.match_points += 1
 
             if len(players) == 1:
                 players[0].had_bye = True
             else:
                 players[0].already_played.add(players[1].name)
                 players[1].already_played.add(players[0].name)
+
+            for player_result in result.player_results:
+                if player_result.drop:
+                    for i, player in enumerate(self.players):
+                        if player.name == player_result.name:
+                            self.players.pop(i)
 
         self.round += 1
 
@@ -117,10 +127,9 @@ class Tournament(object):
         for player in sorted_players:
             remainder = player.match_points % 3
             if remainder != 0:
+                player.match_points -= remainder
                 if random.randint(0, 1):
-                    player.match_points -= remainder + 3
-                else:
-                    player.match_points -= remainder
+                    player.match_points += 3
 
         random.shuffle(sorted_players)
         sorted_players.sort(key=lambda player: player.match_points)
