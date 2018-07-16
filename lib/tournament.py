@@ -3,7 +3,7 @@ import os
 import pickle
 import random
 
-class TournamentException(Exception):
+class TournamentError(Exception):
     pass
 
 def print_pairings(pairings):
@@ -55,7 +55,7 @@ class PlayerMatchResult(object):
 class MatchResult(object):
     def __init__(self, player_results, draws=0):
         if len(player_results) not in (1, 2):
-            raise TournamentException('Need exactly 1 or 2 player results; %d provided' % len(player_results))
+            raise TournamentError('Need exactly 1 or 2 player results; %d provided' % len(player_results))
         self.player_results = player_results
         self.draws = draws
 
@@ -230,11 +230,11 @@ class Tournament(object):
         for result in results:
             for player_result in result.player_results:
                 if player_result.name not in player_names:
-                    raise TournamentException('Player not in tournament or duplicate result: %s' % player_result.name)
+                    raise TournamentError('Player not in tournament or duplicate result: %s' % player_result.name)
                 player_names.remove(player_result.name)
 
         if player_names:
-            raise TournamentException('Results not entered for the following players: %s' % list(player_names))
+            raise TournamentError('Results not entered for the following players: %s' % list(player_names))
 
     def __current_player_names(self):
         names = set()
