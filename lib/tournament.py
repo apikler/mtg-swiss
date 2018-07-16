@@ -13,11 +13,23 @@ def print_pairings(pairings):
         else:
             print('%s, %s' % (pair[0], pair[1]))
 
+def print_rankings_csv(rankings):
+    print('rank,name,match points,opp match win %,game win %,opp game win %')
+    for i, player in enumerate(rankings):
+        print(','.join([
+            str(i+1),
+            player.name, 
+            str(player.match_points), 
+            '%.2f' % player.opp_match_win_percent, 
+            '%.2f' % player.game_win_percent, 
+            '%.2f' % player.opp_game_win_percent]))
+
 class Player(object):
     def __init__(self, name):
         self.name = name
         self.match_points = 0
         self.game_points = 0
+        self.games_played = 0
         self.had_bye = False
 
         # Set of player names
@@ -25,6 +37,12 @@ class Player(object):
 
     def __repr__(self):
         return self.name
+
+    def rounds_played(self):
+        count = len(self.already_played)
+        if self.had_bye:
+            count += 1
+        return count
 
 
 class PlayerMatchResult(object):
@@ -40,6 +58,12 @@ class MatchResult(object):
             raise TournamentException('Need exactly 1 or 2 player results; %d provided' % len(player_results))
         self.player_results = player_results
         self.draws = draws
+
+    def games_played(self):
+        count = self.draws
+        for result in self.player_results:
+            count += result.wins
+        return count
 
     def unplayed(self):
         return len(self.player_results) == 2 and self.player_results[0].wins == 0 and self.player_results[1].wins == 0
@@ -90,6 +114,7 @@ class Tournament(object):
             for player_result in result.player_results:
                 player = self.all_players[player_result.name]
                 player.game_points += 3*player_result.wins + result.draws
+                player.games_played += result.games_played()
                 players.append(player)
 
             if not result.unplayed():
@@ -112,12 +137,48 @@ class Tournament(object):
                         if player.name == player_result.name:
                             self.players.pop(i)
 
+        for player in self.all_players.values():
+            try:
+                player.match_win_percent = max(player.match_points / (3 * player.rounds_played()), 0.33)
+            except ZeroDivisionError:
+                player.match_win_percent = 0.33
+
+            try:
+                player.game_win_percent = max(player.game_points / (3 * player.games_played), 0.33)
+            except ZeroDivisionError:
+                player.game_win_percent = 0.33
+        for player in self.all_players.values():
+            match_total = 0
+            game_total = 0
+            for opponent_name in player.already_played:
+                match_total += self.all_players[opponent_name].match_win_percent
+                game_total += self.all_players[opponent_name].game_win_percent
+            try:
+                player.opp_match_win_percent = match_total / len(player.already_played)
+            except ZeroDivisionError:
+                player.opp_match_win_percent = 0.33
+            try:
+                player.opp_game_win_percent = game_total / len(player.already_played)
+            except ZeroDivisionError:
+                player.opp_game_win_percent = 0.33
+
         self.round += 1
 
     def save(self, dir=None):
         save_dir = dir or self.dir
         with open(os.path.join(save_dir, '%s_round%d.mtg' % (self.name, self.round)), 'wb') as f:
             pickle.dump(self, f)
+
+    def rankings(self):
+        players = copy.deepcopy(self.players)
+        players.sort(
+            reverse=True,
+            key=lambda player: (
+                player.match_points, 
+                player.opp_match_win_percent, 
+                player.game_win_percent, 
+                player.opp_game_win_percent))
+        return players
 
     def __generate_pairings(self):
         sorted_players = copy.deepcopy(self.players[:])

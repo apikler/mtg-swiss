@@ -1,7 +1,7 @@
 import argparse
 import csv
 
-from lib.tournament import Tournament, MatchResult, PlayerMatchResult, print_pairings
+from lib.tournament import Tournament, MatchResult, PlayerMatchResult, print_pairings, print_rankings_csv
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Record results')
@@ -33,4 +33,6 @@ if __name__ == '__main__':
     tournament = Tournament.load(args.file)
     tournament.record_results(results)
     tournament.save()
+    print_rankings_csv(tournament.rankings())
+    print('----------------------------------------------')
     print_pairings(tournament.new_pairings())
