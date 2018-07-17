@@ -13,17 +13,6 @@ def print_pairings(pairings):
         else:
             print('%s, %s' % (pair[0], pair[1]))
 
-def print_rankings_csv(rankings):
-    print('rank,name,match points,opp match win %,game win %,opp game win %')
-    for i, player in enumerate(rankings):
-        print(','.join([
-            str(i+1),
-            player.name, 
-            str(player.match_points), 
-            '%.2f' % player.opp_match_win_percent, 
-            '%.2f' % player.game_win_percent, 
-            '%.2f' % player.opp_game_win_percent]))
-
 class Player(object):
     def __init__(self, name):
         self.name = name
