@@ -2,7 +2,7 @@ import argparse
 import csv
 import os
 
-from lib.tournament import Tournament, MatchResult, PlayerMatchResult, print_pairings
+from lib.tournament import Tournament, MatchResult, PlayerMatchResult, print_pairings, write_scorecard_csv
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Record results')
@@ -51,13 +51,4 @@ if __name__ == '__main__':
     pairings = tournament.new_pairings()
     print_pairings(tournament.new_pairings())
 
-    with open(os.path.join(tournament.dir, 'scorecard.csv'), 'w') as f:
-        writer = csv.writer(f)
-        writer.writerow(['player 1', 'player 2', 'result', 'drop?'])
-        writer.writerow(['alice', 'bob', 'alice (2-1)', '(example)'])
-        writer.writerow([])
-        for pairing in pairings:
-            if len(pairing) == 2:
-                writer.writerow([pairing[0], pairing[1]])
-            else:
-                writer.writerow([pairing[0], '(BYE)', '%s (2-0)' % pairing[0]])
+    write_scorecard_csv(tournament.dir, pairings)

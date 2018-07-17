@@ -1,6 +1,6 @@
 import argparse
 
-from lib.tournament import Tournament, print_pairings
+from lib.tournament import Tournament, print_pairings, write_scorecard_csv
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Start a new tournament.')
@@ -11,4 +11,7 @@ if __name__ == '__main__':
 
     tournament = Tournament(args.name, args.players)
     tournament.save(args.save_to)
-    print_pairings(tournament.new_pairings())
+
+    pairings = tournament.new_pairings()
+    print_pairings(pairings)
+    write_scorecard_csv(args.save_to, pairings)

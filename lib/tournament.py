@@ -1,4 +1,5 @@
 import copy
+import csv
 import os
 import pickle
 import random
@@ -12,6 +13,18 @@ def print_pairings(pairings):
             print('%s (BYE)' % pair[0])
         else:
             print('%s, %s' % (pair[0], pair[1]))
+
+def write_scorecard_csv(directory, pairings):
+    with open(os.path.join(directory, 'scorecard.csv'), 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(['player 1', 'player 2', 'result', 'drop?'])
+        writer.writerow(['alice', 'bob', 'alice (2-1)', '(example)'])
+        writer.writerow([])
+        for pairing in pairings:
+            if len(pairing) == 2:
+                writer.writerow([pairing[0], pairing[1]])
+            else:
+                writer.writerow([pairing[0], '(BYE)', '%s (2-0)' % pairing[0]])
 
 class Player(object):
     def __init__(self, name):
@@ -159,7 +172,7 @@ class Tournament(object):
             pickle.dump(self, f)
 
     def rankings(self):
-        players = copy.deepcopy(self.players)
+        players = copy.deepcopy(list(self.all_players.values()))
         players.sort(
             reverse=True,
             key=lambda player: (
