@@ -49,6 +49,6 @@ if __name__ == '__main__':
                 '%.2f' % player.opp_game_win_percent])
 
     pairings = tournament.new_pairings()
-    print_pairings(tournament.new_pairings())
+    print_pairings(pairings)
 
     write_scorecard_csv(tournament.dir, pairings)
