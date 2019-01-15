@@ -61,10 +61,12 @@ for round 2.
 
 For this you'll want to create a file (let's call it results_round1.txt) with the following syntax:
 
+```
 grace:2,frank:0
 carol:1,alice:2
 bob:2,dan:0,-dan
 erin:2
+```
 
 Here's how to interpret this:
 
