@@ -44,9 +44,9 @@ if __name__ == '__main__':
                 str(i+1),
                 player.name, 
                 str(player.match_points), 
-                '%.2f' % player.opp_match_win_percent, 
-                '%.2f' % player.game_win_percent, 
-                '%.2f' % player.opp_game_win_percent])
+                '%.3f' % player.opp_match_win_percent, 
+                '%.3f' % player.game_win_percent, 
+                '%.3f' % player.opp_game_win_percent])
 
     pairings = tournament.new_pairings()
     print_pairings(pairings)
